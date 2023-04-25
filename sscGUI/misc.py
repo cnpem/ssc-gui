@@ -1,12 +1,7 @@
-import subprocess
-from subprocess import Popen, PIPE, STDOUT
-import time
 import ast
-
 import ipywidgets as widgets 
 from ipywidgets import fixed 
 
-from matplotlib import colors
 
 field_style = {'description_width': 'initial'}
 
@@ -32,6 +27,9 @@ def update_imshow(sinogram,figure,subplot,frame_number,top=0, bottom=None,left=0
         subplot.set_xticks([])
         subplot.set_yticks([])    
     figure.canvas.draw_idle()
+
+def read_string_as_list(str):
+    return ast.literal_eval(str)
 
 class VideoControl:
     def __init__ (self,slider,step,interval,description):
@@ -93,7 +91,7 @@ class Input(object):
     def update_dict_value(self,value):
         if isinstance(self.dictionary[self.key],list) or isinstance(self.dictionary[self.key],dict):
             if isinstance(value,str):
-                self.dictionary[self.key] = ast.literal_eval(value)
+                self.dictionary[self.key] = read_string_as_list(value)
             else :
                 self.dictionary[self.key] = value    
         else:

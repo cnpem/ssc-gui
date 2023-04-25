@@ -10,14 +10,10 @@ from ipywidgets import fixed
 from .misc import Button, Input, update_imshow, slide_and_play
 
 # import sscCdi, sscPimega, sscRaft, sscRadon, sscResolution
-
 # from sscCdi import create_propagation_video
-
 # from .cat_ptycho_processing import masks_application
-
 # from ..misc import miqueles_colormap
 # from ..processing.unwrap import phase_unwrap
-
 # from ..misc import create_directory_if_doesnt_exist
 
 ############################################  PATH DEFINITIONS ###########################################################################
@@ -62,8 +58,7 @@ def create_label_widget(text):
     label = widgets.HTML(value=f"<b style='color:#00008B;font-size:18px;'>{text}</b>")
     return label
 
-def read_string_as_list(str):
-    return ast.literal_eval(str)
+
 
 def save_on_click(dummy,output_dict_filepath="",dictionary={}):
     print('Saving input json file at: ',output_dict_filepath)

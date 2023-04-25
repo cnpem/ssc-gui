@@ -1,0 +1,73 @@
+{
+    "ProposalPath": "/ibira/lnls/beamlines/caterete/apps/jupyter/00000000/data/ptycho2d/",
+    "Acquisition_Folders": ["SS61"],
+    "Projections": [0],
+    "beamline": "CAT",
+    "GPUs": [0],
+    "Threads": 32,
+
+    "SerialRestauration": true,
+    "OldRestauration": true,
+    "DifpadCenter": [1400,1400],
+    "DetectorROI": 1280,
+    "Binning": 4,
+    "ChipBorderRemoval": 5,
+    "FillBlanks": false,
+
+    "AutoCrop": false,
+
+    "DetectorExposure": [false,0.15],
+    "CentralMask": [false,5],
+    
+    "ProbeSupport": [300,0,0],
+    "f1": -1.0E-3,
+    "Modes": 0,
+
+    "Phaseunwrap": [false,5,[],[]],
+
+    "FRC": false,
+    
+    "Preview": true,
+
+    "SaveDifpads": 1,
+    "ReadRestauredDifpads": 0,
+
+    "SaveComplexObject": true,
+    "SaveObj": true,
+    "SaveProbe": true,
+
+    "InitialObj": "",
+    "InitialProbe": "",
+
+    "ObjectPad": 20,
+
+    "Algorithm1": {
+        "Name": "RAAR",
+        "Iterations": 100,
+        "TV": 0,
+        "Epsilon": 1E-2,
+        "Beta": 0.995,
+        "ProbeCycles": 4,
+        "Batch": 64
+    },
+    "Algorithm2": {
+        "Name": "GL",
+        "Iterations": 150,
+        "TV": 1E-4,
+        "Epsilon": 1E-2,
+        "ObjBeta": 0.97,
+        "ProbeBeta": 0.95,
+        "Batch": 64
+    },
+    "Algorithm3": {
+        "Name": "GL",
+        "Iterations": 10,
+        "TV": 1E-3,
+        "Epsilon": 1E-1,
+        "ProbeBeta": 0.5,
+        "ObjBeta": 0.5,
+        "Batch": 64
+    },
+    "PreviewGCC": [false,""],
+    "Seed": 10
+}

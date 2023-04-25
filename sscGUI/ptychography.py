@@ -1,8 +1,10 @@
-import os, json, ast, h5py
+import os, json
 import numpy as np
 import matplotlib.pyplot as plt
 from functools import partial
 import getpass
+
+from skimage.restoration import unwrap_phase
 
 import ipywidgets as widgets 
 from ipywidgets import fixed
@@ -25,6 +27,8 @@ output_folder = "./example/outputs/"
 
 template_dict_path = os.path.join(inputs_folder,'template.json')
 output_dict_path = os.path.join(output_folder, f'{username}_input_dict.json') 
+DP_filepath = os.path.join(inputs_folder,'example_single_data.npy')
+sinogram_filepath = os.path.join(inputs_folder,'complex_sinogram.npy')
 
 global_dict = json.load(open(template_dict_path)) # load from template
 
@@ -77,7 +81,7 @@ def inputs_tab():
     saveJsonButton.trigger(save_on_click_partial)
 
     label0 = create_label_widget("Machine Parameters")
-    gpus = Input("BoundedIntText",global_dict,'GPUs',bounded=(1,5,1), description="# of GPUs:")
+    gpus = Input("BoundedIntText",global_dict,'GPUs',bounded=(1,6,1), description="# of GPUs:")
     cpus = Input("BoundedIntText",global_dict,'CPUs',bounded=(1,32,1),description="# of CPUs:")
     box = widgets.HBox([gpus.widget,cpus.widget])
 
@@ -86,23 +90,24 @@ def inputs_tab():
     
     label2 = create_label_widget("Diffraction Pattern")
     global center_y, center_x
-    center_x    = Input('IntSlider',{'dummy-key':global_dict["DP_center"][1]},'dummy-key',bounded=(0,3072,1),description="Center column (x)",layout=slider_layout2)
-    center_y    = Input('IntSlider',{'dummy-key':global_dict["DP_center"][0]},'dummy-key',bounded=(0,3072,1),description="Center row    (y)",layout=slider_layout2)
+    center_x    = Input('IntSlider',{'dummy-key':global_dict["DP_center"][1]},'dummy-key',bounded=(0,1024,1),description="Center column (x)",layout=slider_layout)
+    center_y    = Input('IntSlider',{'dummy-key':global_dict["DP_center"][0]},'dummy-key',bounded=(0,1024,1),description="Center row    (y)",layout=slider_layout)
 
     label3 = create_label_widget("Post-processing")
     phase_unwrap      = Input('Checkbox',{'dummy-key':global_dict["phase_unwrap"]},'dummy-key',description="Phase Unwrap",layout=checkbox_layout)
     phase_unwrap_box = widgets.Box([phase_unwrap.widget],layout=items_layout2)
     global top_crop, bottom_crop,left_crop,right_crop # variables are reused in crop tab
-    top_crop      = Input('IntSlider',{'dummy_key':0},'dummy_key',bounded=(0,10,1), description="Top", layout=slider_layout)
-    bottom_crop   = Input('IntSlider',{'dummy_key':1},'dummy_key',bounded=(1,10,1), description="Bottom", layout=slider_layout)
-    left_crop     = Input('IntSlider',{'dummy_key':0},'dummy_key',bounded=(0,10,1), description="Left", layout=slider_layout)
-    right_crop    = Input('IntSlider',{'dummy_key':1},'dummy_key',bounded=(1,10,1), description="Right", layout=slider_layout)
+    top_crop      = Input('IntSlider',{'dummy_key':0},'dummy_key',bounded=(0,10,1), description="Top crop", layout=slider_layout)
+    bottom_crop   = Input('IntSlider',{'dummy_key':1},'dummy_key',bounded=(1,10,1), description="Bottom crop", layout=slider_layout)
+    left_crop     = Input('IntSlider',{'dummy_key':0},'dummy_key',bounded=(0,10,1), description="Left crop", layout=slider_layout)
+    right_crop    = Input('IntSlider',{'dummy_key':1},'dummy_key',bounded=(1,10,1), description="Right crop", layout=slider_layout)
 
-    def update_global_dict(data_folder_str,center_y,center_x,phase_unwrap):
+    def update_global_dict(data_folder_str,center_y,center_x,phase_unwrap,top_crop,bottom_crop,left_crop,right_crop):
         global global_dict
         global_dict["data_folder"]  = data_folder_str
         global_dict["DP_center"]    = [center_y,center_x]
         global_dict["phase_unwrap"] = phase_unwrap
+        global_dict["crop"] = [top_crop, bottom_crop, left_crop, right_crop]
 
     """ Monitor variable and call function when they change """
     widgets.interactive_output(update_global_dict,{'data_folder_str':data_folder_str.widget,
@@ -123,172 +128,42 @@ def inputs_tab():
 
 def center_tab():
 
-    # output = widgets.Output()
-    # with output:
-    #     figure, subplot = plt.subplots(figsize=(5,5),constrained_layout=True)
-    #     figure,subplot.imshow(np.random.random((4,4)))
-    #     subplot.set_title('Diffraction Pattern')
-    #     figure.canvas.header_visible = False 
-    #     plt.show()
+    output = widgets.Output()
+    with output:
+        figure, subplot = plt.subplots(figsize=(5,5),constrained_layout=True)
+        figure,subplot.imshow(np.random.random((4,4)))
+        subplot.set_title('Diffraction Pattern')
+        figure.canvas.header_visible = False 
+        plt.show()
 
 
-    # def plotshow(figure,subplot,image,title="",figsize=(8,8),savepath=None,show=False):
-    #     subplot.clear()
-    #     cmap, colors, bounds, norm = miqueles_colormap(image)
-    #     handle = subplot.imshow(image, interpolation='nearest', cmap = cmap, norm=norm)
-    #     if title != "":
-    #         subplot.set_title(title)
-    #     if show:
-    #         if __name__ == '__main__': 
-    #             plt.show()
+    def plotshow(figure,subplot,image,title="",figsize=(8,8),savepath=None,show=False):
+        subplot.clear()
+        from matplotlib.colors import LogNorm
+        handle = subplot.imshow(image, interpolation='nearest', cmap = 'viridis', norm=LogNorm())
+        if title != "":
+            subplot.set_title(title)
+        if show:
+            if __name__ == '__main__': 
+                plt.show()
 
-    #     figure.canvas.draw_idle()
+        figure.canvas.draw_idle()
 
-    # def update_mask(figure, subplot,output_dictionary,image,key1,key2,key3,cy,cx,button,exposure,exposure_time,radius):
+    def update_mask(figure, subplot,image):
+        plotshow(figure,subplot,image)
 
-    #     output_dictionary[key1] = [cy,cx]
-    #     output_dictionary[key2] = [button,radius]
-    #     output_dictionary[key3] = [exposure,exposure_time]
-    #     plotshow(figure,subplot,image)
+    def load_difpad(dummy):
+        image = np.load(DP_filepath)
+        widgets.interactive_output(update_mask,{'figure':fixed(figure), 'subplot': fixed(subplot),'image':fixed(image)})
 
-    # def load_difpad(dummy):
+    load_difpad_button  = Button(description="Load Diffraction Pattern",layout=buttons_layout,icon='folder-open-o')
+    load_difpad_button.trigger(load_difpad)
 
-    #     mdata_filepath = os.path.join(global_dict["data_folder"],global_dict['acquisition_folders'][0],'mdata.json')
-    #     input_dict = json.load(open(mdata_filepath))
-
-    #     image = np.load(global_paths_dict['flipped_difpad_filepath'])
-    #     widgets.interactive_output(update_mask,{'figure':fixed(figure), 'subplot': fixed(subplot),
-    #                                             'output_dictionary':fixed(global_dict),'image':fixed(image),
-    #                                             'key1':fixed('DP_center'),'key2':fixed('central_mask'),
-    #                                             'cy':center_y.widget,'cx':center_x.widget,
-    #                                             'button':central_mask_bool.widget,
-    #                                             'exposure_time':fixed(input_dict['/entry/beamline/detector']['pimega']["exposure time"]),
-    #                                             'radius':central_mask_radius.widget})
-
-    # load_difpad_button  = Button(description="Load Diffraction Pattern",layout=buttons_layout,icon='folder-open-o')
-    # load_difpad_button.trigger(load_difpad)
-
-    # """ Difpad center boxes """
-    # sliders_box = widgets.HBox([center_y.widget,center_x.widget,central_mask_radius.widget],layout=box_layout)
-    # controls = widgets.Box([load_difpad_button.widget,sliders_box,central_mask_bool.widget],layout=get_box_layout('500px'))
-    # box = widgets.HBox([controls,vbar,output])
-    # return box
-    pass
-
-def fresnel_tab():
-    
-    # image_list, fresnel_number_list = [np.random.random((5,5))], [0]
-
-    # output = widgets.Output()
-    # with output:
-    #     figure, subplot = plt.subplots(figsize=(4,4))
-    #     subplot.imshow(image_list[0],cmap='jet') # initialize
-    #     subplot.set_title('Propagated Probe')
-    #     figure.canvas.header_visible = False 
-    #     plt.show()
-
-
-    # def update_probe_plot(fig,subplot,image_list,frame_list,index):
-    #     subplot.clear()
-    #     subplot.set_title(f'Frame #: {frame_list[index]:.1e}')
-    #     subplot.imshow(image_list[index],cmap='jet')
-    #     fig.canvas.draw_idle()
-
-    # def on_click_propagate(dummy):
-    
-    #     print('Propagating probe...')
-    #     image_list, fresnel_number_list = create_propagation_video(global_paths_dict['probe_filepath'],
-    #                                                     starting_f_value=starting_f_value,
-    #                                                     ending_f_value=ending_f_value,
-    #                                                     number_of_frames=number_of_frames,
-    #                                                     jupyter=True)
-        
-    #     play_control.widget.max, selection_slider.widget.max = len(image_list)-1, len(image_list)-1
-
-    #     widgets.interactive_output(update_probe_plot,{'fig':fixed(figure),'subplot':fixed(subplot),'image_list':fixed(image_list),'frame_list':fixed(fresnel_number_list),'index':selection_slider.widget})
-    #     print('\t Done!')
-
-    # def update_values(n_frames,start_f,end_f,power):
-    #     global starting_f_value, ending_f_value, number_of_frames
-    #     starting_f_value=-start_f*10**power
-    #     ending_f_value=-end_f*10**power
-    #     number_of_frames=int(n_frames)
-    #     label.value = r"Propagating from f = {0}$\times 10^{{{1}}}$ to {2}$\times 10^{{{1}}}$".format(start_f,power,end_f)
-
-    # play_box, selection_slider,play_control = slide_and_play(label="")
-
-    # power   = Input( {'dummy-key':-4}, 'dummy-key', bounded=(-10,10,1),   description=r'Exponent'       ,layout=items_layout)
-    # start_f = Input( {'dummy-key':-1}, 'dummy-key', bounded=(-10,0,1),    description='Start f-value'   ,layout=items_layout)
-    # end_f   = Input( {'dummy-key':-9}, 'dummy-key', bounded=(-10,0,1),    description='End f-value'     ,layout=items_layout)
-    # n_frames= Input( {'dummy-key':100},'dummy-key', bounded=(10,200,10),  description='Number of Frames',layout=items_layout)
-
-    # label = widgets.Label(value=r"Propagating from f = {0} $\times 10^{{{1}}}$ to {2} $\times 10^{{{1}}}$".format(start_f,power,end_f),layout=items_layout)
-
-    # widgets.interactive_output(update_values,{'n_frames':n_frames.widget,'start_f':start_f.widget,'end_f':end_f.widget,'power':power.widget})
-    # propagate_button = Button(description=('Propagate Probe'),layout=buttons_layout)
-    # propagate_button.trigger(on_click_propagate)
-
-    # box = widgets.Box([n_frames.widget, power.widget, start_f.widget,end_f.widget,label,propagate_button.widget,fresnel_number.widget],layout=get_box_layout('700px'))
-    # play_box = widgets.VBox([play_box,output],layout=box_layout)
-    # box = widgets.HBox([box,vbar,play_box])
-    # return box
-    pass
-
-def cropunwrap_tab():
-
-    # output = widgets.Output()
-    # with output:
-    #     figure_unwrap, subplot_unwrap = plt.subplots(figsize=(3,3))
-    #     subplot_unwrap.imshow(np.random.random((4,4)),cmap='gray')
-    #     subplot_unwrap.set_title('Cropped image')
-    #     figure_unwrap.canvas.draw_idle()
-    #     figure_unwrap.canvas.header_visible = False 
-    #     plt.show()
-
-    # output2 = widgets.Output()
-    # with output2:
-    #     figure_unwrap2, subplot_unwrap2 = plt.subplots(figsize=(3,3))
-    #     subplot_unwrap2.imshow(np.random.random((4,4)),cmap='gray')
-    #     subplot_unwrap2.set_title('Unwrapped image')
-    #     figure_unwrap2.canvas.draw_idle()
-    #     figure_unwrap2.canvas.header_visible = False 
-    #     plt.show()
-
-    
-    # def load_frames(dummy):
-    #     global sinogram
-        
-    #     print("Loading sinogram from: ",global_paths_dict["sinogram_filepath"] )
-    #     sinogram = np.load(global_paths_dict["sinogram_filepath"] ) 
-    #     print(f'\t Loaded! Sinogram shape: {sinogram.shape}. Type: {type(sinogram)}' )
-    #     selection_slider.widget.max, selection_slider.widget.value = sinogram.shape[0]-1, sinogram.shape[0]//2
-    #     play_control.widget.max = selection_slider.widget.max
-    #     top_crop.widget.max  = bottom_crop.widget.max = sinogram.shape[1]//2 - 1
-    #     left_crop.widget.max = right_crop.widget.max  = sinogram.shape[2]//2 - 1
-    #     widgets.interactive_output(update_imshow, {'sinogram':fixed(np.angle(sinogram)),'figure':fixed(figure_unwrap),'subplot':fixed(subplot_unwrap),'title':fixed(True),'top': top_crop.widget, 'bottom': bottom_crop.widget, 'left': left_crop.widget, 'right': right_crop.widget, 'frame_number': selection_slider.widget})
-
-
-    # def preview_unwrap(dummy):
-    #     cropped_frame = sinogram[selection_slider.widget.value,top_crop.widget.value:-bottom_crop.widget.value,left_crop.widget.value:-right_crop.widget.value]
-    #     cropped_frame = cropped_frame[np.newaxis]
-    #     unwrapped_frame = phase_unwrap(np.angle(cropped_frame),iterations=0,non_negativity=False,remove_gradient = False)
-    #     widgets.interactive_output(update_imshow, {'sinogram':fixed(unwrapped_frame),'figure':fixed(figure_unwrap2),'subplot':fixed(subplot_unwrap2),'title':fixed(True),'frame_number': fixed(0)})
-
-    # play_box, selection_slider,play_control = slide_and_play(label="Frame Selector")
-    
-    # load_frames_button  = Button(description="Load Frames",layout=buttons_layout,icon='folder-open-o')
-    # load_frames_button.trigger(load_frames)
-
-    # preview_unwrap_button = Button(description="Preview Unwrap",layout=buttons_layout,icon='play') 
-    # preview_unwrap_button.trigger(preview_unwrap)
-    
-    # buttons_box = widgets.Box([load_frames_button.widget,preview_unwrap_button.widget],layout=get_box_layout('100%',align_items='center'))
-    # sliders_box = widgets.Box([top_crop.widget,bottom_crop.widget,left_crop.widget,right_crop.widget],layout=sliders_box_layout)
-
-    # controls_box = widgets.Box([buttons_box,play_box,sliders_box],layout=get_box_layout('500px'))
-    # box = widgets.HBox([controls_box,vbar,output,output2])
-    # return box
-    pass
+    """ Difpad center boxes """
+    sliders_box = widgets.HBox([center_y.widget,center_x.widget],layout=box_layout)
+    controls = widgets.Box([load_difpad_button.widget,sliders_box],layout=get_box_layout('500px'))
+    box = widgets.HBox([controls,vbar,output])
+    return box
 
 def reconstruction_tab():
     
@@ -343,21 +218,73 @@ def reconstruction_tab():
     # object_box = widgets.VBox([controls_box,objects_box])
     # box = widgets.HBox([object_box])
     # box = widgets.VBox([buttons_box,box])
+    box = widgets.HBox()
 
-    # return box
-    pass
+    return box
 
+def cropunwrap_tab():
+
+    output = widgets.Output()
+    with output:
+        figure_unwrap, subplot_unwrap = plt.subplots(figsize=(5,5))
+        subplot_unwrap.imshow(np.random.random((4,4)),cmap='gray')
+        subplot_unwrap.set_title('Original')
+        figure_unwrap.canvas.draw_idle()
+        figure_unwrap.canvas.header_visible = False 
+        plt.show()
+
+    output2 = widgets.Output()
+    with output2:
+        figure_unwrap2, subplot_unwrap2 = plt.subplots(figsize=(5,5))
+        subplot_unwrap2.imshow(np.random.random((4,4)),cmap='gray')
+        subplot_unwrap2.set_title('Unwrapped')
+        figure_unwrap2.canvas.draw_idle()
+        figure_unwrap2.canvas.header_visible = False 
+        plt.show()
+
+    
+    def load_frames(dummy):
+        global sinogram
+        
+        print("Loading sinogram from: ",sinogram_filepath )
+        sinogram = np.load(sinogram_filepath ) 
+        print(f'\t Loaded! Sinogram shape: {sinogram.shape}. Type: {type(sinogram)}' )
+        selection_slider.widget.max, selection_slider.widget.value = sinogram.shape[0]-1, sinogram.shape[0]//2
+        play_control.widget.max = selection_slider.widget.max
+        top_crop.widget.max  = bottom_crop.widget.max = sinogram.shape[1]//2 - 1
+        left_crop.widget.max = right_crop.widget.max  = sinogram.shape[2]//2 - 1
+        widgets.interactive_output(update_imshow, {'sinogram':fixed(np.angle(sinogram)),'figure':fixed(figure_unwrap),'subplot':fixed(subplot_unwrap),'title':fixed(True),'top': top_crop.widget, 'bottom': bottom_crop.widget, 'left': left_crop.widget, 'right': right_crop.widget, 'frame_number': selection_slider.widget})
+
+    def preview_unwrap(dummy):
+        cropped_frame = sinogram[selection_slider.widget.value,top_crop.widget.value:-bottom_crop.widget.value,left_crop.widget.value:-right_crop.widget.value]
+        cropped_frame = cropped_frame[np.newaxis]
+        unwrapped_frame = unwrap_phase(np.angle(cropped_frame))
+        widgets.interactive_output(update_imshow, {'sinogram':fixed(unwrapped_frame),'figure':fixed(figure_unwrap2),'subplot':fixed(subplot_unwrap2),'title':fixed(True),'frame_number': fixed(0)})
+
+    play_box, selection_slider,play_control = slide_and_play(label="Frame Selector")
+    
+    load_frames_button  = Button(description="Load Frames",layout=buttons_layout,icon='folder-open-o')
+    load_frames_button.trigger(load_frames)
+
+    preview_unwrap_button = Button(description="Preview Unwrap",layout=buttons_layout,icon='play') 
+    preview_unwrap_button.trigger(preview_unwrap)
+    
+    buttons_box = widgets.Box([load_frames_button.widget,preview_unwrap_button.widget],layout=get_box_layout('100%',align_items='center'))
+    sliders_box = widgets.Box([top_crop.widget,bottom_crop.widget,left_crop.widget,right_crop.widget],layout=sliders_box_layout)
+
+    controls_box = widgets.Box([buttons_box,play_box,sliders_box],layout=get_box_layout('500px'))
+    box = widgets.HBox([controls_box,vbar,output,output2])
+    return box
 
 ############################################ DEPLOYMENT ######################################################
 
-def deploy_tabs(tab1=inputs_tab(),tab2=inputs_tab(),tab3=inputs_tab(),tab4=inputs_tab(),tab5=inputs_tab()):
+def deploy_tabs(tab1=inputs_tab(),tab2=center_tab(),tab3=reconstruction_tab(),tab4=cropunwrap_tab()):
     
     children_dict = {
     "Inputs"            : tab1,
     "Find Center"       : tab2,
-    "Probe Propagation" : tab3,
-    "Crop and Unwrap"   : tab4,
-    "Reconstruction"    : tab5}
+    "Reconstruction"    : tab3,
+    "Crop and Unwrap"   : tab4}
     
     tab = widgets.Tab()
     tab.children = list(children_dict.values())

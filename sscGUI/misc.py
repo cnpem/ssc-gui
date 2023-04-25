@@ -102,7 +102,7 @@ def slide_and_play(slider_layout=widgets.Layout(width='90%'),label="",descriptio
     def update_frame_time(play_control,time_per_frame):
         play_control.widget.interval = time_per_frame
 
-    selection_slider = Input({"dummy_key":1},"dummy_key",description=description, bounded=(0,100,1),slider=True,layout=widgets.Layout(width='max-width'))
+    selection_slider = Input('IntSlider',{"dummy_key":1},"dummy_key",description=description, bounded=(0,100,1),layout=widgets.Layout(width='max-width'))
     play_control = VideoControl(selection_slider,1,100,"Play Button")
 
     pbox = widgets.Box([play_control.widget],layout=get_box_layout('max-width'))

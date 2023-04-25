@@ -57,7 +57,7 @@ class Button:
 
 class Input(object):
 
-    def __init__(self,type,dictionary,key,field_description="",layout=None,bounded=()):
+    def __init__(self,type,dictionary,key,description="",layout=None,bounded=()):
         
         self.dictionary = dictionary
         self.key = key
@@ -68,23 +68,23 @@ class Input(object):
             self.items_layout = layout
    
         if type == 'Checkbox':
-            self.widget = widgets.Checkbox(description=field_description,value=self.dictionary[self.key],layout=self.items_layout, style=field_style)
+            self.widget = widgets.Checkbox(description=description,value=self.dictionary[self.key],layout=self.items_layout, style=field_style)
         elif type == "IntSlider":
-            self.widget = widgets.IntSlider(description=field_description,value=self.dictionary[self.key],layout=self.items_layout, style=field_style,min=bounded[0],max=bounded[1],step=bounded[2],)
+            self.widget = widgets.IntSlider(description=description,value=self.dictionary[self.key],layout=self.items_layout, style=field_style,min=bounded[0],max=bounded[1],step=bounded[2])
         elif type == "IntText":
-            self.widget = widgets.IntText(description=field_description,value=self.dictionary[self.key],layout=self.items_layout, style=field_style)
+            self.widget = widgets.IntText(description=description,value=self.dictionary[self.key],layout=self.items_layout, style=field_style)
         elif type == "BoundedIntText":
-            self.widget = widgets.BoundedIntText(description=field_description,value=self.dictionary[self.key],layout=self.items_layout, style=field_style, min=bounded[0],max=bounded[1],step=bounded[2],)
+            self.widget = widgets.BoundedIntText(description=description,value=self.dictionary[self.key],layout=self.items_layout, style=field_style, min=bounded[0],max=bounded[1],step=bounded[2])
         elif type == "FloatText":
-            self.widget = widgets.FloatText(description=field_description,value=self.dictionary[self.key],layout=self.items_layout, style=field_style)
+            self.widget = widgets.FloatText(description=description,value=self.dictionary[self.key],layout=self.items_layout, style=field_style)
         elif type == "BoundedFloatText":
-            self.widget = widgets.BoundedFloatText(description=field_description,value=self.dictionary[self.key],layout=self.items_layout, style=field_style,min=bounded[0],max=bounded[1],step=bounded[2],)
+            self.widget = widgets.BoundedFloatText(description=description,value=self.dictionary[self.key],layout=self.items_layout, style=field_style,min=bounded[0],max=bounded[1],step=bounded[2])
         elif type == "TextString":
-            self.widget = widgets.Text(description=field_description,value=self.dictionary[self.key],layout=self.items_layout, style=field_style)
+            self.widget = widgets.Text(description=description,value=self.dictionary[self.key],layout=self.items_layout, style=field_style)
         elif type == "TextList":
-            self.widget = widgets.Text(description=field_description,value=str(self.dictionary[self.key]),layout=self.items_layout, style=field_style)
+            self.widget = widgets.Text(description=description,value=str(self.dictionary[self.key]),layout=self.items_layout, style=field_style)
         elif type == "TextDict":
-            self.widget = widgets.Text(description=field_description,value=str(self.dictionary[self.key]),layout=self.items_layout, style=field_style)
+            self.widget = widgets.Text(description=description,value=str(self.dictionary[self.key]),layout=self.items_layout, style=field_style)
         
         widgets.interactive_output(self.update_dict_value,{'value':self.widget}) # monitor changes in widget and call function when it occurs
 

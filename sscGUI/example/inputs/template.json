@@ -1,0 +1,12 @@
+{
+   
+    "data_folder": "./example/inputs/example_data.npy",
+
+    "GPUs": 0,
+    "CPUs": 32,
+
+    "DP_center": [1400,1400],
+
+    "phase_unwrap": false
+
+}

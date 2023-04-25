@@ -23,7 +23,7 @@ username = getpass.getuser()
 inputs_folder = "./example/inputs/"
 output_folder = "./example/outputs/"
 
-template_dict_path = os.path.join(inputs_folder,inputs_folder)
+template_dict_path = os.path.join(inputs_folder,'template.json')
 output_dict_path = os.path.join(output_folder, f'{username}_input_dict.json') 
 
 global_dict = json.load(open(template_dict_path)) # load from template
@@ -58,8 +58,6 @@ def create_label_widget(text):
     label = widgets.HTML(value=f"<b style='color:#00008B;font-size:18px;'>{text}</b>")
     return label
 
-
-
 def save_on_click(dummy,output_dict_filepath="",dictionary={}):
     print('Saving input json file at: ',output_dict_filepath)
     file = open(output_dict_filepath,"w")
@@ -73,28 +71,32 @@ def inputs_tab():
 
     global global_dict
 
+    """ Create widgets """
     save_on_click_partial = partial(save_on_click,output_dict_filepath=output_folder,dictionary=global_dict)
     saveJsonButton = Button(description="Save Inputs",layout=buttons_layout,icon='fa-floppy-o')
     saveJsonButton.trigger(save_on_click_partial)
 
-    """ Create widgets """
+    label0 = create_label_widget("Machine Parameters")
+    gpus = Input("BoundedIntText",global_dict,'GPUs',bounded=(1,5,1), description="# of GPUs:")
+    cpus = Input("BoundedIntText",global_dict,'CPUs',bounded=(1,32,1),description="# of CPUs:")
+    box = widgets.HBox([gpus.widget,cpus.widget])
 
     label1 = create_label_widget("Data Selection")
-    data_folder_str     = Input(global_dict,"data_folder",description="Proposal Path",layout=items_layout2)
+    data_folder_str     = Input('TextString',global_dict,"data_folder",description="Data path",layout=items_layout2)
     
     label2 = create_label_widget("Diffraction Pattern")
     global center_y, center_x
-    center_x    = Input({'dummy-key':global_dict["DP_center"][1]},'dummy-key',bounded=(0,3072,1),slider=True,description="Center column (x)",layout=slider_layout)
-    center_y    = Input({'dummy-key':global_dict["DP_center"][0]},'dummy-key',bounded=(0,3072,1),slider=True,description="Center row (y)   ",layout=slider_layout)
-    
-    label6 = create_label_widget("Post-processing")
-    phase_unwrap      = Input({'dummy-key':global_dict["phase_unwrap"]},'dummy-key',description="Phase Unwrap",layout=checkbox_layout)
+    center_x    = Input('IntSlider',{'dummy-key':global_dict["DP_center"][1]},'dummy-key',bounded=(0,3072,1),description="Center column (x)",layout=slider_layout2)
+    center_y    = Input('IntSlider',{'dummy-key':global_dict["DP_center"][0]},'dummy-key',bounded=(0,3072,1),description="Center row    (y)",layout=slider_layout2)
+
+    label3 = create_label_widget("Post-processing")
+    phase_unwrap      = Input('Checkbox',{'dummy-key':global_dict["phase_unwrap"]},'dummy-key',description="Phase Unwrap",layout=checkbox_layout)
     phase_unwrap_box = widgets.Box([phase_unwrap.widget],layout=items_layout2)
     global top_crop, bottom_crop,left_crop,right_crop # variables are reused in crop tab
-    top_crop      = Input({'dummy_key':0},'dummy_key',bounded=(0,10,1), description="Top", slider=True,layout=slider_layout)
-    bottom_crop   = Input({'dummy_key':1},'dummy_key',bounded=(1,10,1), description="Bottom", slider=True,layout=slider_layout)
-    left_crop     = Input({'dummy_key':0},'dummy_key',bounded=(0,10,1), description="Left", slider=True,layout=slider_layout)
-    right_crop    = Input({'dummy_key':1},'dummy_key',bounded=(1,10,1), description="Right", slider=True,layout=slider_layout)
+    top_crop      = Input('IntSlider',{'dummy_key':0},'dummy_key',bounded=(0,10,1), description="Top", layout=slider_layout)
+    bottom_crop   = Input('IntSlider',{'dummy_key':1},'dummy_key',bounded=(1,10,1), description="Bottom", layout=slider_layout)
+    left_crop     = Input('IntSlider',{'dummy_key':0},'dummy_key',bounded=(0,10,1), description="Left", layout=slider_layout)
+    right_crop    = Input('IntSlider',{'dummy_key':1},'dummy_key',bounded=(1,10,1), description="Right", layout=slider_layout)
 
     def update_global_dict(data_folder_str,center_y,center_x,phase_unwrap):
         global global_dict
@@ -115,7 +117,7 @@ def inputs_tab():
                                                     'right_crop': right_crop.widget,
                                                      })
 
-    box = widgets.Box([label1,data_folder_str.widget,label2,center_x.widget,center_y.widget,label6,phase_unwrap_box],layout=box_layout)
+    box = widgets.Box([label0,gpus.widget,cpus.widget,label1,data_folder_str.widget,label2,center_y.widget,center_x.widget,label3,phase_unwrap_box],layout=box_layout)
 
     return box
 
@@ -215,10 +217,10 @@ def fresnel_tab():
 
     # play_box, selection_slider,play_control = slide_and_play(label="")
 
-    # power   = Input( {'dummy-key':-4}, 'dummy-key', bounded=(-10,10,1),  slider=True, description=r'Exponent'       ,layout=items_layout)
-    # start_f = Input( {'dummy-key':-1}, 'dummy-key', bounded=(-10,0,1),   slider=True, description='Start f-value'   ,layout=items_layout)
-    # end_f   = Input( {'dummy-key':-9}, 'dummy-key', bounded=(-10,0,1),   slider=True, description='End f-value'     ,layout=items_layout)
-    # n_frames= Input( {'dummy-key':100},'dummy-key', bounded=(10,200,10), slider=True, description='Number of Frames',layout=items_layout)
+    # power   = Input( {'dummy-key':-4}, 'dummy-key', bounded=(-10,10,1),   description=r'Exponent'       ,layout=items_layout)
+    # start_f = Input( {'dummy-key':-1}, 'dummy-key', bounded=(-10,0,1),    description='Start f-value'   ,layout=items_layout)
+    # end_f   = Input( {'dummy-key':-9}, 'dummy-key', bounded=(-10,0,1),    description='End f-value'     ,layout=items_layout)
+    # n_frames= Input( {'dummy-key':100},'dummy-key', bounded=(10,200,10),  description='Number of Frames',layout=items_layout)
 
     # label = widgets.Label(value=r"Propagating from f = {0} $\times 10^{{{1}}}$ to {2} $\times 10^{{{1}}}$".format(start_f,power,end_f),layout=items_layout)
 
@@ -348,25 +350,20 @@ def reconstruction_tab():
 
 ############################################ DEPLOYMENT ######################################################
 
-def deploy_tabs(tab1=inputs_tab(),tab2=center_tab(),tab3=fresnel_tab(),tab4=reconstruction_tab(),tab5=cropunwrap_tab()):
+def deploy_tabs(tab1=inputs_tab(),tab2=inputs_tab(),tab3=inputs_tab(),tab4=inputs_tab(),tab5=inputs_tab()):
     
     children_dict = {
     "Inputs"            : tab1,
     "Find Center"       : tab2,
     "Probe Propagation" : tab3,
     "Crop and Unwrap"   : tab4,
-    "Reconstruction"    : tab5
-    }
+    "Reconstruction"    : tab5}
     
-    gpus = Input({'dummy_key':1}, 'dummy_key',bounded=(1,5,1),  slider=True,description="Insert # of gpus to use:")
-    cpus = Input({'dummy_key':32},'dummy_key',bounded=(1,32,1),slider=True,description="Insert # of CPUs to use:")
-    box = widgets.HBox([gpus.widget,cpus.widget])
-
     tab = widgets.Tab()
     tab.children = list(children_dict.values())
     for i in range(len(children_dict)): tab.set_title(i,list(children_dict.keys())[i]) # insert title in the tabs
 
-    return box,tab, global_dict  
+    return tab, global_dict  
 
 
 

@@ -1,2 +1,2 @@
 from .misc import *
-from ptchography import *
+from .ptychography import *

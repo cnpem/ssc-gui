@@ -1,6 +1,4 @@
-# ssc-gui
-
-Welcome to the Sirius Scientific Computing GUI package!
+# Welcome to the Sirius Scientific Computing GUI package!
 
 This package offers a simple structure to use Jupyter Widgets separated in tabs to ease the user experience when going through a processing pipeline.
 
@@ -18,7 +16,7 @@ python3 setup.py install --user
 
 ## Guetting started
 
-Simply use the sscGUI/gui.ipynb notebook to load the example data and play around with the interface!
+Simply use the sscGUI/gui.ipynb notebook to load the example data and play around with the interface.
 
 ## Feeback
 

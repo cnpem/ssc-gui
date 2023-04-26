@@ -1,18 +1,17 @@
 {
-   "CPUs": 25,
+   "CPUs": 32,
    "DP_center": [
-      22,
-      25
+      10,
+      15
    ],
-   "GPUs": 3,
+   "GPUs": 1,
    "crop": [
-      22,
-      16,
+      0,
+      1,
       0,
       1
    ],
-   "data_folder": "./example/inputs/example_data.npy",
-   "data_path": "./example/inputs/example_data.npy",
+   "data_path": "./example/inputs/example_dataa.npy",
    "object_path": "./example/inputs/complex_sinogram.npy",
    "phase_unwrap": false,
    "probe_path": "./example/inputs/example_probes.npy"

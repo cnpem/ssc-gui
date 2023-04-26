@@ -1,6 +1,6 @@
 {
    
-    "data_path":   "./example/inputs/example_data.npy",
+    "data_path":   "./example/inputs/example_single_data.npy",
     "object_path": "./example/inputs/complex_sinogram.npy",
     "probe_path":  "./example/inputs/example_probes.npy",
 

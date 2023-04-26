@@ -22,10 +22,6 @@ output_folder = "./example/outputs/"
 template_dict_path = os.path.join(inputs_folder,'template.json')
 output_dict_path = os.path.join(output_folder, f'{username}_input_dict.json') 
 
-DP_filepath = os.path.join(inputs_folder,'example_single_data.npy')
-sinogram_filepath = os.path.join(inputs_folder,'complex_sinogram.npy')
-probe_filepath = os.path.join(inputs_folder,'example_probes.npy')
-
 global_dict = json.load(open(template_dict_path)) # load from template
 
 ############################################  GLOBAL LAYOUTS  ###########################################################################
@@ -100,15 +96,19 @@ def inputs_tab():
     left_crop     = Input('IntSlider',{'dummy_key':0},'dummy_key',bounded=(0,10,1), description="Left crop", layout=slider_layout)
     right_crop    = Input('IntSlider',{'dummy_key':1},'dummy_key',bounded=(1,10,1), description="Right crop", layout=slider_layout)
 
-    def update_global_dict(data_folder_str,center_y,center_x,phase_unwrap,top_crop,bottom_crop,left_crop,right_crop):
+    def update_global_dict(data_folder_str,obj_folder_str,probe_folder_str,center_y,center_x,phase_unwrap,top_crop,bottom_crop,left_crop,right_crop):
         global global_dict
-        global_dict["data_folder"]  = data_folder_str
+        global_dict["data_path"]  = data_folder_str
+        global_dict["object_path"]  = obj_folder_str
+        global_dict["probe_path"]  = probe_folder_str
         global_dict["DP_center"]    = [center_y,center_x]
         global_dict["phase_unwrap"] = phase_unwrap
         global_dict["crop"] = [top_crop, bottom_crop, left_crop, right_crop]
 
     """ Monitor variable and call function when they change """
     widgets.interactive_output(update_global_dict,{'data_folder_str':data_folder_str.widget,
+                                                   'obj_folder_str':object_path_str.widget,
+                                                   'probe_folder_str':probe_path_str.widget,
                                                     'center_y':center_y.widget,
                                                     'center_x':center_x.widget,
                                                     'phase_unwrap': phase_unwrap.widget,
@@ -149,7 +149,8 @@ def center_tab():
         plotshow(figure,subplot,image)
 
     def load_difpad(dummy):
-        image = np.load(DP_filepath)
+        print(global_dict['data_path'])
+        image = np.load(global_dict['data_path'])
         widgets.interactive_output(update_mask,{'figure':fixed(figure), 'subplot': fixed(subplot),'image':fixed(image)})
 
     load_difpad_button  = Button(description="Load Diffraction Pattern",layout=buttons_layout,icon='folder-open-o')
@@ -198,15 +199,15 @@ def reconstruction_tab():
 
     def load_frames(dummy):
         global sinogram
-        print("Loading sinogram from: ",sinogram_filepath)
-        sinogram = np.load(sinogram_filepath ) 
+        print("Loading sinogram from: ",global_dict['object_path'])
+        sinogram = np.load(global_dict['object_path'] ) 
         print(f'\t Loaded! Sinogram shape: {sinogram.shape}. Type: {type(sinogram)}' )
         selection_slider.widget.max, selection_slider.widget.value = sinogram.shape[0]-1, sinogram.shape[0]//2
         play_control.widget.max = selection_slider.widget.max
         widgets.interactive_output(update_imshow, {'sinogram':fixed(np.angle(sinogram)),'figure':fixed(figure),'subplot':fixed(subplot),'title':fixed('Obj Phase'),'cmap':fixed('hsv'), 'frame_number': selection_slider.widget})
         widgets.interactive_output(update_imshow, {'sinogram':fixed(np.abs(sinogram)),'figure':fixed(figure3),'subplot':fixed(subplot3),'title':fixed('Obj Mag'), 'frame_number': selection_slider.widget})
 
-        probe =  np.load(probe_filepath) 
+        probe =  np.load(global_dict['probe_path']) 
         widgets.interactive_output(update_imshow, {'sinogram':fixed(np.angle(probe)),'figure':fixed(figure2),'subplot':fixed(subplot2),'title':fixed('Probe Phase'), 'cmap':fixed('hsv'), 'frame_number': selection_slider.widget})
         widgets.interactive_output(update_imshow, {'sinogram':fixed(np.abs(probe)),'figure':fixed(figure4),'subplot':fixed(subplot4),'title':fixed('Probe Mag'), 'frame_number': selection_slider.widget})
 
@@ -249,8 +250,8 @@ def cropunwrap_tab():
     def load_frames(dummy):
         global sinogram
         
-        print("Loading sinogram from: ",sinogram_filepath )
-        sinogram = np.load(sinogram_filepath ) 
+        print("Loading sinogram from: ",global_dict['object_path'] )
+        sinogram = np.load(global_dict['object_path'] ) 
         print(f'\t Loaded! Sinogram shape: {sinogram.shape}. Type: {type(sinogram)}' )
         selection_slider.widget.max, selection_slider.widget.value = sinogram.shape[0]-1, sinogram.shape[0]//2
         play_control.widget.max = selection_slider.widget.max

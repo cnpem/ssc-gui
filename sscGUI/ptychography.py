@@ -11,12 +11,6 @@ from ipywidgets import fixed
 
 from .misc import Button, Input, update_imshow, slide_and_play
 
-# import sscCdi, sscPimega, sscRaft, sscRadon, sscResolution
-# from sscCdi import create_propagation_video
-# from .cat_ptycho_processing import masks_application
-# from ..misc import miqueles_colormap
-# from ..processing.unwrap import phase_unwrap
-# from ..misc import create_directory_if_doesnt_exist
 
 ############################################  PATH DEFINITIONS ###########################################################################
 
@@ -27,6 +21,7 @@ output_folder = "./example/outputs/"
 
 template_dict_path = os.path.join(inputs_folder,'template.json')
 output_dict_path = os.path.join(output_folder, f'{username}_input_dict.json') 
+
 DP_filepath = os.path.join(inputs_folder,'example_single_data.npy')
 sinogram_filepath = os.path.join(inputs_folder,'complex_sinogram.npy')
 probe_filepath = os.path.join(inputs_folder,'example_probes.npy')
@@ -77,7 +72,7 @@ def inputs_tab():
     global global_dict
 
     """ Create widgets """
-    save_on_click_partial = partial(save_on_click,output_dict_filepath=output_folder,dictionary=global_dict)
+    save_on_click_partial = partial(save_on_click,output_dict_filepath=output_dict_path,dictionary=global_dict)
     saveJsonButton = Button(description="Save Inputs",layout=buttons_layout,icon='fa-floppy-o')
     saveJsonButton.trigger(save_on_click_partial)
 
@@ -87,7 +82,9 @@ def inputs_tab():
     box = widgets.HBox([gpus.widget,cpus.widget])
 
     label1 = create_label_widget("Data Selection")
-    data_folder_str     = Input('TextString',global_dict,"data_folder",description="Data path",layout=items_layout2)
+    data_folder_str = Input('TextString',global_dict,"data_path",  description="Diffraction datapath",layout=items_layout2)
+    object_path_str = Input('TextString',global_dict,"object_path",description="Object datapath",layout=items_layout2)
+    probe_path_str  = Input('TextString',global_dict,"probe_path" ,description="Probe datapath",layout=items_layout2)
     
     label2 = create_label_widget("Diffraction Pattern")
     global center_y, center_x
@@ -112,8 +109,6 @@ def inputs_tab():
 
     """ Monitor variable and call function when they change """
     widgets.interactive_output(update_global_dict,{'data_folder_str':data_folder_str.widget,
-                                                    # energy
-                                                    # distance
                                                     'center_y':center_y.widget,
                                                     'center_x':center_x.widget,
                                                     'phase_unwrap': phase_unwrap.widget,
@@ -123,7 +118,7 @@ def inputs_tab():
                                                     'right_crop': right_crop.widget,
                                                      })
 
-    box = widgets.Box([label0,gpus.widget,cpus.widget,label1,data_folder_str.widget,label2,center_y.widget,center_x.widget,label3,phase_unwrap_box],layout=box_layout)
+    box = widgets.Box([saveJsonButton.widget,label0,gpus.widget,cpus.widget,label1,data_folder_str.widget,object_path_str.widget,probe_path_str.widget,label2,center_y.widget,center_x.widget,label3,phase_unwrap_box,top_crop.widget,bottom_crop.widget,left_crop.widget,right_crop.widget],layout=box_layout)
 
     return box
 

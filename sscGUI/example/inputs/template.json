@@ -1,6 +1,8 @@
 {
    
-    "data_folder": "./example/inputs/example_data.npy",
+    "data_path":   "./example/inputs/example_data.npy",
+    "object_path": "./example/inputs/complex_sinogram.npy",
+    "probe_path":  "./example/inputs/example_probes.npy",
 
     "GPUs": 0,
     "CPUs": 32,

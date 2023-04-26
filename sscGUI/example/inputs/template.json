@@ -5,7 +5,7 @@
     "GPUs": 0,
     "CPUs": 32,
 
-    "DP_center": [500,500],
+    "DP_center": [10,15],
 
     "phase_unwrap": false
 

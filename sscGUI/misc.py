@@ -5,7 +5,7 @@ from ipywidgets import fixed
 
 field_style = {'description_width': 'initial'}
 
-def update_imshow(sinogram,figure,subplot,frame_number,top=0, bottom=None,left=0,right=None,axis=0,title=False,clear_axis=True,cmap='gray',norm=None):
+def update_imshow(sinogram,figure,subplot,frame_number,top=0, bottom=None,left=0,right=None,axis=0,title='',clear_axis=True,cmap='gray',norm=None):
     subplot.clear()
     if bottom == None or right == None:
         if axis == 0:
@@ -21,8 +21,8 @@ def update_imshow(sinogram,figure,subplot,frame_number,top=0, bottom=None,left=0
             subplot.imshow(sinogram[top:-bottom,frame_number,left:-right],cmap=cmap,norm=norm)
         elif axis == 2:
             subplot.imshow(sinogram[top:-bottom,left:-right,frame_number],cmap=cmap,norm=norm)
-    if title == True:
-        subplot.set_title(f'Frame #{frame_number}')
+    if title != '':
+        subplot.set_title(title)
     if clear_axis == True:
         subplot.set_xticks([])
         subplot.set_yticks([])    

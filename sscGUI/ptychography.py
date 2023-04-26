@@ -91,8 +91,8 @@ def inputs_tab():
     
     label2 = create_label_widget("Diffraction Pattern")
     global center_y, center_x
-    center_x    = Input('IntSlider',{'dummy-key':global_dict["DP_center"][1]},'dummy-key',bounded=(0,1024,1),description="Center column (x)",layout=slider_layout)
-    center_y    = Input('IntSlider',{'dummy-key':global_dict["DP_center"][0]},'dummy-key',bounded=(0,1024,1),description="Center row    (y)",layout=slider_layout)
+    center_x    = Input('IntSlider',{'dummy-key':global_dict["DP_center"][1]},'dummy-key',bounded=(0,50,1),description="Center column (x)",layout=slider_layout)
+    center_y    = Input('IntSlider',{'dummy-key':global_dict["DP_center"][0]},'dummy-key',bounded=(0,50,1),description="Center row    (y)",layout=slider_layout)
 
     label3 = create_label_widget("Post-processing")
     phase_unwrap      = Input('Checkbox',{'dummy-key':global_dict["phase_unwrap"]},'dummy-key',description="Phase Unwrap",layout=checkbox_layout)
@@ -193,6 +193,13 @@ def reconstruction_tab():
         figure2.canvas.header_visible = False 
         plt.show()
 
+    output4 = widgets.Output()
+    with output4:
+        figure4, subplot4 = plt.subplots(figsize=(4,4))
+        subplot4.imshow(initial_image,cmap='gray')
+        figure4.canvas.header_visible = False 
+        plt.show()
+
 
     def load_frames(dummy):
         global sinogram
@@ -201,11 +208,12 @@ def reconstruction_tab():
         print(f'\t Loaded! Sinogram shape: {sinogram.shape}. Type: {type(sinogram)}' )
         selection_slider.widget.max, selection_slider.widget.value = sinogram.shape[0]-1, sinogram.shape[0]//2
         play_control.widget.max = selection_slider.widget.max
-        widgets.interactive_output(update_imshow, {'sinogram':fixed(np.angle(sinogram)),'figure':fixed(figure),'subplot':fixed(subplot),'title':fixed(True), 'frame_number': selection_slider.widget})
-        widgets.interactive_output(update_imshow, {'sinogram':fixed(np.abs(sinogram)),'figure':fixed(figure3),'subplot':fixed(subplot3),'title':fixed(True), 'frame_number': selection_slider.widget})
+        widgets.interactive_output(update_imshow, {'sinogram':fixed(np.angle(sinogram)),'figure':fixed(figure),'subplot':fixed(subplot),'title':fixed('Obj Phase'),'cmap':fixed('hsv'), 'frame_number': selection_slider.widget})
+        widgets.interactive_output(update_imshow, {'sinogram':fixed(np.abs(sinogram)),'figure':fixed(figure3),'subplot':fixed(subplot3),'title':fixed('Obj Mag'), 'frame_number': selection_slider.widget})
 
-        probe = np.abs(np.load(probe_filepath))# get only 0th order 
-        widgets.interactive_output(update_imshow, {'sinogram':fixed(probe),'figure':fixed(figure2),'subplot':fixed(subplot2),'title':fixed(True), 'cmap':fixed('jet'), 'frame_number': selection_slider.widget})
+        probe =  np.load(probe_filepath) 
+        widgets.interactive_output(update_imshow, {'sinogram':fixed(np.angle(probe)),'figure':fixed(figure2),'subplot':fixed(subplot2),'title':fixed('Probe Phase'), 'cmap':fixed('hsv'), 'frame_number': selection_slider.widget})
+        widgets.interactive_output(update_imshow, {'sinogram':fixed(np.abs(probe)),'figure':fixed(figure4),'subplot':fixed(subplot4),'title':fixed('Probe Mag'), 'frame_number': selection_slider.widget})
 
     play_box, selection_slider,play_control = slide_and_play(label="Frame Selector")
 
@@ -215,7 +223,7 @@ def reconstruction_tab():
     buttons_box = widgets.Box([load_frames_button.widget],layout=get_box_layout('100%',align_items='center'))
 
     controls_box = widgets.Box([play_box],layout=get_box_layout('500px'))
-    objects_box = widgets.HBox([output,output3,output2])
+    objects_box = widgets.HBox([output,output3,output2,output4])
     object_box = widgets.VBox([controls_box,objects_box])
     box = widgets.HBox([object_box])
     box = widgets.VBox([buttons_box,box])
@@ -253,13 +261,13 @@ def cropunwrap_tab():
         play_control.widget.max = selection_slider.widget.max
         top_crop.widget.max  = bottom_crop.widget.max = sinogram.shape[1]//2 - 1
         left_crop.widget.max = right_crop.widget.max  = sinogram.shape[2]//2 - 1
-        widgets.interactive_output(update_imshow, {'sinogram':fixed(np.angle(sinogram)),'figure':fixed(figure_unwrap),'subplot':fixed(subplot_unwrap),'title':fixed(True),'top': top_crop.widget, 'bottom': bottom_crop.widget, 'left': left_crop.widget, 'right': right_crop.widget, 'frame_number': selection_slider.widget})
+        widgets.interactive_output(update_imshow, {'sinogram':fixed(np.angle(sinogram)),'figure':fixed(figure_unwrap),'subplot':fixed(subplot_unwrap),'title':fixed(''),'top': top_crop.widget, 'bottom': bottom_crop.widget, 'left': left_crop.widget, 'right': right_crop.widget, 'frame_number': selection_slider.widget})
 
     def preview_unwrap(dummy):
         cropped_frame = sinogram[selection_slider.widget.value,top_crop.widget.value:-bottom_crop.widget.value,left_crop.widget.value:-right_crop.widget.value]
         cropped_frame = cropped_frame[np.newaxis]
         unwrapped_frame = unwrap_phase(np.angle(cropped_frame))
-        widgets.interactive_output(update_imshow, {'sinogram':fixed(unwrapped_frame),'figure':fixed(figure_unwrap2),'subplot':fixed(subplot_unwrap2),'title':fixed(True),'frame_number': fixed(0)})
+        widgets.interactive_output(update_imshow, {'sinogram':fixed(unwrapped_frame),'figure':fixed(figure_unwrap2),'subplot':fixed(subplot_unwrap2),'title':fixed(''),'frame_number': fixed(0)})
 
     play_box, selection_slider,play_control = slide_and_play(label="Frame Selector")
     
@@ -281,10 +289,10 @@ def cropunwrap_tab():
 def deploy_tabs(tab1=inputs_tab(),tab2=center_tab(),tab3=reconstruction_tab(),tab4=cropunwrap_tab()):
     
     children_dict = {
-    "Inputs"            : tab1,
-    "Find Center"       : tab2,
-    "Reconstruction"    : tab3,
-    "Crop and Unwrap"   : tab4}
+    "Inputs"   : tab1,
+    "Center"   : tab2,
+    "Preview"  : tab3,
+    "Unwrap"   : tab4}
     
     tab = widgets.Tab()
     tab.children = list(children_dict.values())

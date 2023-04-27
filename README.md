@@ -14,10 +14,10 @@ We hope you can adjust this framework to create your own tabs and make user expe
 python3 setup.py install --user
 ```
 
-## Guetting started
+## Getting started
 
 Simply use the sscGUI/gui.ipynb notebook to load the example data and play around with the interface.
 
-## Feeback
+## Feedback
 
 For feedbacks and comments, please contact the Scientific Computing Team at gcc@lnls.br
